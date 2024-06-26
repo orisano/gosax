@@ -24,6 +24,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+// Package gosax provides a Simple API for XML (SAX) parser for Go.
+// It offers efficient, read-only XML parsing with streaming capabilities,
+// inspired by quick-xml and other high-performance parsing techniques.
 package gosax
 
 import (
@@ -62,15 +65,25 @@ type Reader struct {
 }
 
 func NewReader(r io.Reader) *Reader {
+	return NewReaderSize(r, 2*1024*1024)
+}
+
+func NewReaderSize(r io.Reader, bufSize int) *Reader {
 	return &Reader{
 		reader: byteReader{
-			data: make([]byte, 0, 2*1024*1024),
+			data: make([]byte, 0, bufSize),
 			r:    r,
 		},
 		state: (*Reader).stateInit,
 	}
 }
 
+// Event returns the next Event from the XML stream.
+// It returns an Event and any error encountered.
+//
+// Note: The returned Event object is only valid until the next call to Event.
+// The underlying byte slice may be overwritten by subsequent calls.
+// If you need to retain the Event data, make a copy before the next Event call.
 func (r *Reader) Event() (Event, error) {
 	return r.state(r)
 }
@@ -308,6 +321,8 @@ func readText(r *byteReader) (int, error) {
 	}
 }
 
+// Name extracts the name from an XML tag.
+// It returns the name and the remaining bytes.
 func Name(b []byte) ([]byte, []byte) {
 	if len(b) > 1 && b[0] == '<' {
 		b = b[1:]
@@ -328,6 +343,8 @@ type Attribute struct {
 	Value []byte
 }
 
+// NextAttribute extracts the next attribute from an XML tag.
+// It returns the Attribute and the remaining bytes.
 func NextAttribute(b []byte) (Attribute, []byte) {
 	i := 0
 	for ; i < len(b) && whitespace[b[i]]; i++ {
@@ -374,6 +391,8 @@ var whitespace = [256]bool{
 	'\t': true,
 }
 
+// Unescape decodes XML entity references in a byte slice.
+// It returns the unescaped bytes and any error encountered.
 func Unescape(b []byte) ([]byte, error) {
 	p := bytes.IndexByte(b, '&')
 	if p < 0 {

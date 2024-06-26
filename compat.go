@@ -24,13 +24,19 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+// This file contains utility functions to bridge gosax with encoding/xml.
+// These functions provide convenient ways to convert gosax types to encoding/xml types,
+// facilitating interoperability between the two packages.
+
 package gosax
 
 import (
 	"bytes"
 	"encoding/xml"
+	"io"
 )
 
+// StartElement converts a byte slice to an xml.StartElement.
 func StartElement(b []byte) xml.StartElement {
 	name, b := Name(b)
 	e := xml.StartElement{
@@ -47,6 +53,7 @@ func StartElement(b []byte) xml.StartElement {
 	return e
 }
 
+// EndElement converts a byte slice to an xml.EndElement.
 func EndElement(b []byte) xml.EndElement {
 	name, _ := Name(b)
 	return xml.EndElement{
@@ -54,14 +61,17 @@ func EndElement(b []byte) xml.EndElement {
 	}
 }
 
+// CharData converts a byte slice to xml.CharData.
 func CharData(b []byte) (xml.CharData, error) {
 	return Unescape(b)
 }
 
+// Comment converts a byte slice to an xml.Comment.
 func Comment(b []byte) xml.Comment {
 	return trim(b, "<!--", "-->")
 }
 
+// ProcInst converts a byte slice to an xml.ProcInst.
 func ProcInst(b []byte) xml.ProcInst {
 	name, b := Name(b)
 	return xml.ProcInst{
@@ -70,10 +80,17 @@ func ProcInst(b []byte) xml.ProcInst {
 	}
 }
 
+// Directive converts a byte slice to an xml.Directive.
 func Directive(b []byte) xml.Directive {
 	return trim(b, "<!", ">")
 }
 
+// Token converts an Event to an xml.Token.
+// This function is provided for convenience, but it may allocate memory.
+//
+// Note: For performance-critical applications, it's recommended to use
+// the direct conversion functions (StartElement, EndElement, CharData, etc.)
+// instead of Token, as they allow better control over memory allocations.
 func Token(e Event) (xml.Token, error) {
 	switch e.Type() {
 	case EventStart:
@@ -90,6 +107,8 @@ func Token(e Event) (xml.Token, error) {
 		return ProcInst(e.Bytes), nil
 	case EventDocType:
 		return Directive(e.Bytes), nil
+	case EventEOF:
+		return nil, io.EOF
 	default:
 		panic("unknown event type")
 	}
