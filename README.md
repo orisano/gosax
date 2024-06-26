@@ -1,5 +1,7 @@
 # gosax
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/orisano/gosax.svg)](https://pkg.go.dev/github.com/orisano/gosax)
+
 `gosax` is a Go library for XML SAX (Simple API for XML) parsing, supporting read-only functionality. This library is
 designed for efficient and memory-conscious XML parsing, drawing inspiration from various sources to provide a
 performant parser.
