@@ -11,6 +11,7 @@ performant parser.
 - **Read-only SAX parsing**: Stream and process XML documents without loading the entire document into memory.
 - **Efficient parsing**: Utilizes techniques inspired by `quick-xml` and `pkg/json` for high performance.
 - **SWAR (SIMD Within A Register)**: Optimizations for fast text processing, inspired by `memchr`.
+- **Compatibility with encoding/xml**: Includes utility functions to bridge `gosax` types with `encoding/xml` types, facilitating easy integration with existing code that uses the standard library.
 
 ## Installation
 
@@ -58,6 +59,28 @@ func main() {
 	// </root>
 }
 
+```
+
+### Bridging with encoding/xml
+
+`gosax` provides utility functions to convert its types to `encoding/xml` types:
+
+This allows for easy integration with existing code that uses the standard library's XML package.
+
+```go
+import (
+    "encoding/xml"
+    "github.com/orisano/gosax"
+)
+
+// ... 
+
+event, _ := r.Event()
+if event.Type() == gosax.EventStart {
+    startElement := gosax.StartElement(event.Bytes)
+    // Now you can use startElement as an xml.StartElement
+    // ...
+}
 ```
 
 ## License
