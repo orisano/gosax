@@ -39,6 +39,9 @@ import (
 // StartElement converts a byte slice to an xml.StartElement.
 func StartElement(b []byte) (xml.StartElement, error) {
 	name, b := Name(b)
+	if len(b) > 0 && b[len(b)-1] == '/' {
+		b = b[:len(b)-1]
+	}
 	e := xml.StartElement{
 		Name: xmlName(name),
 	}
