@@ -345,27 +345,27 @@ type Attribute struct {
 
 // NextAttribute extracts the next attribute from an XML tag.
 // It returns the Attribute and the remaining bytes.
-func NextAttribute(b []byte) (Attribute, []byte) {
+func NextAttribute(b []byte) (Attribute, []byte, error) {
 	i := 0
 	for ; i < len(b) && whitespace[b[i]]; i++ {
 	}
 	if i == len(b) {
-		return Attribute{}, nil
+		return Attribute{}, nil, nil
 	}
 	keyStart := i
 	for ; i < len(b) && !whitespace[b[i]] && b[i] != '='; i++ {
 	}
 	if i == len(b) {
-		return Attribute{Key: b[keyStart:]}, nil
+		return Attribute{Key: b[keyStart:]}, nil, nil
 	}
 	key := b[keyStart:i]
 	for ; i < len(b) && whitespace[b[i]]; i++ {
 	}
 	if i == len(b) {
-		return Attribute{Key: key}, nil
+		return Attribute{Key: key}, nil, nil
 	}
 	if b[i] != '=' {
-		return Attribute{Key: key}, b[i:]
+		return Attribute{Key: key}, b[i:], nil
 	}
 	i++
 	for ; i < len(b) && whitespace[b[i]]; i++ {
@@ -374,14 +374,14 @@ func NextAttribute(b []byte) (Attribute, []byte) {
 	if b[i] == '"' {
 		valueEnd := i + 1 + bytes.IndexByte(b[i+1:], '"') + 1
 		value := b[i:valueEnd]
-		return Attribute{Key: key, Value: value}, b[valueEnd:]
+		return Attribute{Key: key, Value: value}, b[valueEnd:], nil
 	}
 	if b[i] == '\'' {
 		valueEnd := i + 1 + bytes.IndexByte(b[i+1:], '\'') + 1
 		value := b[i:valueEnd]
-		return Attribute{Key: key, Value: value}, b[valueEnd:]
+		return Attribute{Key: key, Value: value}, b[valueEnd:], nil
 	}
-	panic("unsupported")
+	return Attribute{}, nil, fmt.Errorf("invalid attribute value: %c", b[i])
 }
 
 var whitespace = [256]bool{

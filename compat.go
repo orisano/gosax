@@ -37,20 +37,24 @@ import (
 )
 
 // StartElement converts a byte slice to an xml.StartElement.
-func StartElement(b []byte) xml.StartElement {
+func StartElement(b []byte) (xml.StartElement, error) {
 	name, b := Name(b)
 	e := xml.StartElement{
 		Name: xmlName(name),
 	}
 	for len(b) > 0 {
 		var attr Attribute
-		attr, b = NextAttribute(b)
+		var err error
+		attr, b, err = NextAttribute(b)
+		if err != nil {
+			return xml.StartElement{}, err
+		}
 		e.Attr = append(e.Attr, xml.Attr{
 			Name:  xmlName(attr.Key),
 			Value: string(attr.Value[1 : len(attr.Value)-1]),
 		})
 	}
-	return e
+	return e, nil
 }
 
 // EndElement converts a byte slice to an xml.EndElement.
@@ -94,7 +98,7 @@ func Directive(b []byte) xml.Directive {
 func Token(e Event) (xml.Token, error) {
 	switch e.Type() {
 	case EventStart:
-		return StartElement(e.Bytes), nil
+		return StartElement(e.Bytes)
 	case EventEnd:
 		return EndElement(e.Bytes), nil
 	case EventText:

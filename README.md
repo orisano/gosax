@@ -77,7 +77,7 @@ import (
 
 event, _ := r.Event()
 if event.Type() == gosax.EventStart {
-    startElement := gosax.StartElement(event.Bytes)
+    startElement, err := gosax.StartElement(event.Bytes)
     // Now you can use startElement as an xml.StartElement
     // ...
 }
