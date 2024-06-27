@@ -13,6 +13,14 @@ performant parser.
 - **SWAR (SIMD Within A Register)**: Optimizations for fast text processing, inspired by `memchr`.
 - **Compatibility with encoding/xml**: Includes utility functions to bridge `gosax` types with `encoding/xml` types, facilitating easy integration with existing code that uses the standard library.
 
+## Benchmark
+```
+goos: darwin
+goarch: arm64
+pkg: github.com/orisano/gosax
+BenchmarkReader_Event-12    	       5	 211845800 ns/op	1103.30 MB/s	 2097606 B/op	       6 allocs/op
+```
+
 ## Installation
 
 To install `gosax`, use `go get`:
