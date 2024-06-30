@@ -69,9 +69,13 @@ func NewReader(r io.Reader) *Reader {
 }
 
 func NewReaderSize(r io.Reader, bufSize int) *Reader {
+	return NewReaderBuf(r, make([]byte, 0, bufSize))
+}
+
+func NewReaderBuf(r io.Reader, buf []byte) *Reader {
 	return &Reader{
 		reader: byteReader{
-			data: make([]byte, 0, bufSize),
+			data: buf,
 			r:    r,
 		},
 		state: (*Reader).stateInit,
