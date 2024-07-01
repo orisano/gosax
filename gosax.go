@@ -92,6 +92,14 @@ func (r *Reader) Event() (Event, error) {
 	return r.state(r)
 }
 
+func (r *Reader) Reset(reader io.Reader) {
+	r.reader = byteReader{
+		data: r.reader.data,
+		r:    reader,
+	}
+	r.state = (*Reader).stateInit
+}
+
 func (r *Reader) stateInit() (Event, error) {
 	// remove_utf8_bom
 	return r.stateInsideText()
