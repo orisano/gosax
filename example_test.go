@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 
 	"github.com/orisano/gosax"
 )
@@ -50,6 +51,62 @@ func ExampleReader_Event() {
 		}
 		fmt.Println(string(e.Bytes))
 	}
+	// Output:
+	// <root>
+	// <element>
+	// Value
+	// </element>
+	// </root>
+}
+
+func ExampleNewReaderBuf() {
+	xmlData := `<root><element>Value</element></root>`
+	reader := strings.NewReader(xmlData)
+
+	var buf [4096]byte
+	r := gosax.NewReaderBuf(reader, buf[:])
+	for {
+		e, err := r.Event()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if e.Type() == gosax.EventEOF {
+			break
+		}
+		fmt.Println(string(e.Bytes))
+	}
+	// Output:
+	// <root>
+	// <element>
+	// Value
+	// </element>
+	// </root>
+}
+
+func ExampleReader_Reset() {
+	pool := sync.Pool{
+		New: func() any {
+			return gosax.NewReaderSize(nil, 16*1024)
+		},
+	}
+	func(p *sync.Pool) {
+		xmlData := `<root><element>Value</element></root>`
+		reader := strings.NewReader(xmlData)
+
+		r := p.Get().(*gosax.Reader)
+		defer p.Put(r)
+		r.Reset(reader)
+		for {
+			e, err := r.Event()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if e.Type() == gosax.EventEOF {
+				break
+			}
+			fmt.Println(string(e.Bytes))
+		}
+	}(&pool)
 	// Output:
 	// <root>
 	// <element>
