@@ -73,13 +73,10 @@ func NewReaderSize(r io.Reader, bufSize int) *Reader {
 }
 
 func NewReaderBuf(r io.Reader, buf []byte) *Reader {
-	return &Reader{
-		reader: byteReader{
-			data: buf,
-			r:    r,
-		},
-		state: (*Reader).stateInit,
-	}
+	var xr Reader
+	xr.reader.data = buf
+	xr.Reset(r)
+	return &xr
 }
 
 // Event returns the next Event from the XML stream.
@@ -93,8 +90,12 @@ func (r *Reader) Event() (Event, error) {
 }
 
 func (r *Reader) Reset(reader io.Reader) {
+	data := r.reader.data
+	if data != nil {
+		data = data[:0]
+	}
 	r.reader = byteReader{
-		data: r.reader.data,
+		data: data,
 		r:    reader,
 	}
 	r.state = (*Reader).stateInit
