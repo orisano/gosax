@@ -139,6 +139,12 @@ func (r *Reader) stateInsideText() (Event, error) {
 	}
 }
 
+var stateChangeMarker = [256]bool{
+	'"':  true,
+	'\'': true,
+	'>':  true,
+}
+
 func (r *Reader) stateInsideMarkup() (Event, error) {
 	r.state = (*Reader).stateInsideText
 	rr := &r.reader
@@ -268,7 +274,7 @@ func (r *Reader) stateInsideMarkup() (Event, error) {
 					p := -1
 					var ch byte
 					for i, c := range w[offset:] {
-						if c == '"' || c == '>' || c == '\'' {
+						if stateChangeMarker[c] {
 							p = i
 							ch = c
 							break
