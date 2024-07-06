@@ -148,3 +148,39 @@ func ExampleToken() {
 	// EndElement element
 	// EndElement root
 }
+
+func ExampleReader_EmitSelfClosingTag() {
+	xmlData := `<root><element>Value</element><selfclosing/></root>`
+	reader := strings.NewReader(xmlData)
+
+	r := gosax.NewReader(reader)
+	r.EmitSelfClosingTag = true
+	for {
+		e, err := r.Event()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if e.Type() == gosax.EventEOF {
+			break
+		}
+		switch e.Type() {
+		case gosax.EventStart:
+			name, _ := gosax.Name(e.Bytes)
+			fmt.Println("EventStart", string(name))
+		case gosax.EventEnd:
+			name, _ := gosax.Name(e.Bytes)
+			fmt.Println("EventEnd", string(name))
+		case gosax.EventText:
+			fmt.Println("EventText", string(e.Bytes))
+		default:
+		}
+	}
+	// Output:
+	// EventStart root
+	// EventStart element
+	// EventText Value
+	// EventEnd element
+	// EventStart selfclosing
+	// EventEnd selfclosing
+	// EventEnd root
+}

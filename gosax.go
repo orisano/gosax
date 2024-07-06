@@ -62,6 +62,9 @@ func (e Event) Type() uint8 {
 type Reader struct {
 	reader byteReader
 	state  func(*Reader) (Event, error)
+
+	EmitSelfClosingTag bool
+	selfClosingEnd     int
 }
 
 func NewReader(r io.Reader) *Reader {
@@ -282,7 +285,12 @@ func (r *Reader) stateInsideMarkup() (Event, error) {
 					}
 					if p >= 0 {
 						if ch == '>' {
-							r.reader.offset += offset + p + 1
+							if r.EmitSelfClosingTag && w[offset+p-1] == '/' {
+								r.selfClosingEnd = offset + p
+								r.state = (*Reader).stateSelfClosingTag
+							} else {
+								r.reader.offset += offset + p + 1
+							}
 							return Event{
 								Bytes: w[:offset+p+1],
 								value: EventStart,
@@ -310,6 +318,16 @@ func (r *Reader) stateInsideMarkup() (Event, error) {
 			w = rr.window()
 		}
 	}
+}
+
+func (r *Reader) stateSelfClosingTag() (Event, error) {
+	r.state = (*Reader).stateInsideText
+	w := r.reader.window()
+	r.reader.offset += r.selfClosingEnd + 1
+	return Event{
+		Bytes: w[:r.selfClosingEnd+1],
+		value: EventEnd,
+	}, nil
 }
 
 func (r *Reader) stateDone() (Event, error) {
@@ -346,7 +364,13 @@ func Name(b []byte) ([]byte, []byte) {
 	if len(b) > 1 && b[0] == '<' {
 		b = b[1:]
 	}
+	if len(b) > 1 && b[0] == '/' {
+		b = b[1:]
+	}
 	if len(b) > 1 && b[len(b)-1] == '>' {
+		b = b[:len(b)-1]
+	}
+	if len(b) > 1 && b[len(b)-1] == '/' {
 		b = b[:len(b)-1]
 	}
 	for i, c := range b {
