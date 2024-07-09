@@ -102,6 +102,7 @@ func (r *Reader) Reset(reader io.Reader) {
 		r:    reader,
 	}
 	r.state = (*Reader).stateInit
+	r.EmitSelfClosingTag = false
 }
 
 func (r *Reader) stateInit() (Event, error) {
