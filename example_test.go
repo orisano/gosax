@@ -184,3 +184,11 @@ func ExampleReader_EmitSelfClosingTag() {
 	// EventEnd selfclosing
 	// EventEnd root
 }
+
+func ExampleUnescape() {
+	xmlData := "Line1\r\nLine2\rLine3\nLine4\r\nLine5\r\n"
+	b, _ := gosax.Unescape([]byte(xmlData))
+	fmt.Printf("%q", string(b))
+	// Output:
+	// "Line1\nLine2\nLine3\nLine4\nLine5\n"
+}

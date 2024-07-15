@@ -438,57 +438,69 @@ var whitespace = [256]bool{
 // Unescape decodes XML entity references in a byte slice.
 // It returns the unescaped bytes and any error encountered.
 func Unescape(b []byte) ([]byte, error) {
-	p := bytes.IndexByte(b, '&')
+	p := indexUnescape(b)
 	if p < 0 {
 		return b, nil
 	}
 	begin := 0
 	cur := p
 	for {
-		var escaped []byte
-		for i := 2; i < 13 && p+i < len(b); i++ {
-			if b[p+i] == ';' {
-				escaped = b[p+1 : p+i]
-				break
+		if b[p] == '&' {
+			var escaped []byte
+			for i := 2; i < 13 && p+i < len(b); i++ {
+				if b[p+i] == ';' {
+					escaped = b[p+1 : p+i]
+					break
+				}
 			}
-		}
-		if len(escaped) <= 1 {
-			return nil, fmt.Errorf("invalid escape sequence")
-		}
-		if cur != p && begin != p {
-			cur += copy(b[cur:], b[begin:p])
-		}
-		if escaped[0] == '#' {
-			var x uint64
-			var err error
-			if escaped[1] == 'x' {
-				x, err = strconv.ParseUint(string(escaped[2:]), 16, 32)
+			if len(escaped) <= 1 {
+				return nil, fmt.Errorf("invalid escape sequence")
+			}
+			if cur != p && begin != p {
+				cur += copy(b[cur:], b[begin:p])
+			}
+			if escaped[0] == '#' {
+				var x uint64
+				var err error
+				if escaped[1] == 'x' {
+					x, err = strconv.ParseUint(string(escaped[2:]), 16, 32)
+				} else {
+					x, err = strconv.ParseUint(string(escaped[1:]), 10, 32)
+				}
+				if err != nil {
+					return nil, fmt.Errorf("invalid char reference: %w", err)
+				}
+				cur += utf8.EncodeRune(b[cur:], rune(x))
 			} else {
-				x, err = strconv.ParseUint(string(escaped[1:]), 10, 32)
+				switch string(escaped) {
+				case "lt":
+					b[cur] = '<'
+				case "gt":
+					b[cur] = '>'
+				case "amp":
+					b[cur] = '&'
+				case "apos":
+					b[cur] = '\''
+				case "quot":
+					b[cur] = '"'
+				default:
+					return nil, fmt.Errorf("invalid escape sequence: %q", string(escaped))
+				}
+				cur++
 			}
-			if err != nil {
-				return nil, fmt.Errorf("invalid char reference: %w", err)
-			}
-			cur += utf8.EncodeRune(b[cur:], rune(x))
+			begin = p + len(escaped) + 2
 		} else {
-			switch string(escaped) {
-			case "lt":
-				b[cur] = '<'
-			case "gt":
-				b[cur] = '>'
-			case "amp":
-				b[cur] = '&'
-			case "apos":
-				b[cur] = '\''
-			case "quot":
-				b[cur] = '"'
-			default:
-				return nil, fmt.Errorf("invalid escape sequence: %q", string(escaped))
+			if cur != p && begin != p {
+				cur += copy(b[cur:], b[begin:p])
 			}
+			b[cur] = '\n'
 			cur++
+			begin = p + 1
+			if p+1 < len(b) && b[p+1] == '\n' {
+				begin += 1
+			}
 		}
-		begin = p + len(escaped) + 2
-		if i := bytes.IndexByte(b[begin:], '&'); i >= 0 {
+		if i := indexUnescape(b[begin:]); i >= 0 {
 			p = begin + i
 		} else {
 			break
@@ -498,4 +510,27 @@ func Unescape(b []byte) ([]byte, error) {
 		cur += copy(b[cur:], b[begin:])
 	}
 	return b[:cur], nil
+}
+
+func indexUnescape(s []byte) int {
+	const (
+		splat uint64 = 0x0101010101010101
+		v1           = '&' * splat
+		v2           = '\r' * splat
+	)
+	offset := 0
+	for len(s) >= 8 {
+		v := binary.LittleEndian.Uint64(s[:8])
+		if hasZeroByte(v^v1) || hasZeroByte(v^v2) {
+			break
+		}
+		s = s[8:]
+		offset += 8
+	}
+	for i, c := range s {
+		if c == '&' || c == '\r' {
+			return offset + i
+		}
+	}
+	return -1
 }
