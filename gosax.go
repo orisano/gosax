@@ -352,7 +352,7 @@ func readText(r *byteReader) (int, error) {
 		if i := bytes.IndexByte(w[offset:], '<'); i >= 0 {
 			return offset + i, nil
 		}
-		offset += len(w)
+		offset = len(w)
 		if r.extend() == 0 {
 			return offset, r.err
 		}
