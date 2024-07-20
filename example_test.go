@@ -116,7 +116,7 @@ func ExampleReader_Reset() {
 }
 
 func ExampleToken() {
-	xmlData := `<root><element>Value</element></root>`
+	xmlData := `<root><element foo="&lt;bar&gt;" bar="qux">Value</element></root>`
 	reader := strings.NewReader(xmlData)
 
 	r := gosax.NewReader(reader)
@@ -135,6 +135,9 @@ func ExampleToken() {
 		switch t := t.(type) {
 		case xml.StartElement:
 			fmt.Println("StartElement", t.Name.Local)
+			for _, attr := range t.Attr {
+				fmt.Println("Attr", attr.Name.Local, attr.Value)
+			}
 		case xml.EndElement:
 			fmt.Println("EndElement", t.Name.Local)
 		case xml.CharData:
@@ -144,6 +147,8 @@ func ExampleToken() {
 	// Output:
 	// StartElement root
 	// StartElement element
+	// Attr foo <bar>
+	// Attr bar qux
 	// CharData Value
 	// EndElement element
 	// EndElement root

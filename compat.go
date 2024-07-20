@@ -49,9 +49,13 @@ func StartElement(b []byte) (xml.StartElement, error) {
 		if err != nil {
 			return xml.StartElement{}, err
 		}
+		value, err := Unescape(attr.Value[1 : len(attr.Value)-1])
+		if err != nil {
+			return xml.StartElement{}, err
+		}
 		e.Attr = append(e.Attr, xml.Attr{
 			Name:  xmlName(attr.Key),
-			Value: string(attr.Value[1 : len(attr.Value)-1]),
+			Value: string(value),
 		})
 	}
 	return e, nil
