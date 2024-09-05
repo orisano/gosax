@@ -75,6 +75,9 @@ func main() {
 
 This allows for easy integration with existing code that uses the standard library's XML package.
 
+**Important Note for encoding/xml Users:**
+> When migrating from `encoding/xml` to `gosax`, be aware that there is a significant difference in how self-closing tags are handled. To achieve behavior similar to `encoding/xml`, you **must** set `gosax.Reader.EmitSelfClosingTag` to `true`. This ensures that self-closing tags are properly recognized and handled as distinct events.
+
 ```go
 import (
     "encoding/xml"
