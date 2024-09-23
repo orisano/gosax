@@ -199,7 +199,8 @@ func ExampleUnescape() {
 }
 
 func ExampleStartElement() {
-	xmlData := `<root><element foo="bar"
+	xmlData := `<root><element
+	foo="bar"
 	>
 	</element></root>`
 	reader := strings.NewReader(xmlData)
