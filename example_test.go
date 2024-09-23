@@ -197,3 +197,42 @@ func ExampleUnescape() {
 	// Output:
 	// "Line1\nLine2\nLine3\nLine4\nLine5\n"
 }
+
+func ExampleStartElement() {
+	xmlData := `<root><element foo="bar"
+	>
+	</element></root>`
+	reader := strings.NewReader(xmlData)
+
+	r := gosax.NewReader(reader)
+	for {
+		e, err := r.Event()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if e.Type() == gosax.EventEOF {
+			break
+		}
+		t, err := gosax.Token(e)
+		if err != nil {
+			log.Fatal(err)
+		}
+		switch t := t.(type) {
+		case xml.StartElement:
+			fmt.Println("StartElement", t.Name.Local)
+			for _, attr := range t.Attr {
+				fmt.Println("Attr", attr.Name.Local, attr.Value)
+			}
+		case xml.EndElement:
+			fmt.Println("EndElement", t.Name.Local)
+		case xml.CharData:
+			continue
+		}
+	}
+	// Output:
+	// StartElement root
+	// StartElement element
+	// Attr foo bar
+	// EndElement element
+	// EndElement root
+}

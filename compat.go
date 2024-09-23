@@ -49,6 +49,9 @@ func StartElement(b []byte) (xml.StartElement, error) {
 		if err != nil {
 			return xml.StartElement{}, err
 		}
+		if attr.Key == nil && attr.Value == nil {
+			continue
+		}
 		value, err := Unescape(attr.Value[1 : len(attr.Value)-1])
 		if err != nil {
 			return xml.StartElement{}, err
