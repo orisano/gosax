@@ -125,6 +125,36 @@ func Token(e Event) (xml.Token, error) {
 	}
 }
 
+// TokenE returns an xml.Token from an Event or an error if one is passed.
+// If err is not nil, it immediately returns nil and the provided error.
+func TokenE(e Event, err error) (xml.Token, error) {
+	if err != nil {
+		return nil, err
+	}
+	return Token(e)
+}
+
+// Skip advances the XML reader to the end of the current nested scope, returning an error if encountered.
+func Skip(r *Reader) error {
+	var depth int64
+	for {
+		ev, err := r.Event()
+		if err != nil {
+			return err
+		}
+		switch ev.Type() {
+		case EventStart:
+			depth++
+		case EventEnd:
+			if depth == 0 {
+				return nil
+			}
+			depth--
+		default:
+		}
+	}
+}
+
 func xmlName(b []byte) xml.Name {
 	if i := bytes.IndexByte(b, ':'); i >= 0 {
 		return xml.Name{
