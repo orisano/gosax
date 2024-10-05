@@ -71,27 +71,73 @@ func main() {
 
 ### Bridging with encoding/xml
 
-`gosax` provides utility functions to convert its types to `encoding/xml` types:
-
-This allows for easy integration with existing code that uses the standard library's XML package.
-
 **Important Note for encoding/xml Users:**
-> When migrating from `encoding/xml` to `gosax`, be aware that there is a significant difference in how self-closing tags are handled. To achieve behavior similar to `encoding/xml`, you **must** set `gosax.Reader.EmitSelfClosingTag` to `true`. This ensures that self-closing tags are properly recognized and handled as distinct events.
+> When migrating from `encoding/xml` to `gosax`, note that self-closing tags are handled differently. To mimic `encoding/xml` behavior, set `gosax.Reader.EmitSelfClosingTag` to `true`. This ensures self-closing tags are recognized and processed correctly.
 
+#### Using TokenE
+If you are used to `encoding/xml`'s `Token`, start with `gosax.TokenE`. 
+**Note:** Using `gosax.TokenE` and `gosax.Token` involves memory allocation due to interfaces.
+
+**Before:**
 ```go
-import (
-    "encoding/xml"
-    "github.com/orisano/gosax"
-)
-
-// ... 
-
-event, _ := r.Event()
-if event.Type() == gosax.EventStart {
-    startElement, err := gosax.StartElement(event.Bytes)
-    // Now you can use startElement as an xml.StartElement
-    // ...
+var dec *xml.Decoder
+for {
+	tok, err := dec.Token()
+	if err == io.EOF {
+		break
+	}
+	// ...
 }
+```
+
+**After:**
+```go
+var dec *gosax.Reader
+for {
+	tok, err := gosax.TokenE(dec.Event())
+	if err == io.EOF {
+		break
+	}
+	// ...
+}
+```
+
+#### Utilizing xmlb
+`xmlb` is an extension for `gosax` to simplify rewriting code from `encoding/xml`. It provides a higher-performance bridge for XML parsing and processing.
+
+**Before:**
+```go
+var dec *xml.Decoder
+for {
+	tok, err := dec.Token()
+	if err == io.EOF {
+		break
+	}
+	switch t := tok.(type) {
+	case xml.StartElement:
+	case xml.CharData:
+	case xml.EndElement:
+	}
+} 
+```
+
+**After:**
+```go
+var dec *gosax.Reader
+for {
+	ev, _ := dec.Event()
+	if ev == gosax.EventEOF {
+		break
+	}
+	switch tok := xmlb.Token(ev); tok.Type() {
+	case xmlb.StartElement:
+		t, _ := tok.StartElement()
+	case xmlb.CharData:
+		t, _ := tok.CharData()
+	case xmlb.EndElement:
+		t, _ := tok.EndElement()
+	}
+} 
 ```
 
 ## License
