@@ -135,7 +135,7 @@ for {
 	case xmlb.CharData:
 		t, _ := tok.CharData()
 	case xmlb.EndElement:
-		t, _ := tok.EndElement()
+		t := tok.EndElement()
 	}
 } 
 ```
