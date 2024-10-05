@@ -24,6 +24,12 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+// Package xmlb provides a high-performance bridge between the gosax library and encoding/xml.
+// It is designed to facilitate the rewriting of code that uses encoding/xml, offering a more efficient
+// and memory-conscious approach to XML parsing.
+//
+// While gosax provides a low-level bridge with encoding/xml through various utility functions,
+// xmlb offers a higher-performance bridge intended for rewriting.
 package xmlb
 
 import (
