@@ -115,27 +115,33 @@ for {
 	}
 	switch t := tok.(type) {
 	case xml.StartElement:
+		// ...
 	case xml.CharData:
+        // ...
 	case xml.EndElement:
+		// ...
 	}
 } 
 ```
 
 **After:**
 ```go
-var dec *gosax.Reader
+var dec *xmlb.Decoder
 for {
-	ev, _ := dec.Event()
-	if ev == gosax.EventEOF {
+	tok, err := dec.Token()
+	if err == io.EOF {
 		break
 	}
-	switch tok := xmlb.Token(ev); tok.Type() {
+	switch tok.Type() {
 	case xmlb.StartElement:
 		t, _ := tok.StartElement()
+		// ...
 	case xmlb.CharData:
 		t, _ := tok.CharData()
+		// ...
 	case xmlb.EndElement:
 		t := tok.EndElement()
+		// ...
 	}
 } 
 ```
