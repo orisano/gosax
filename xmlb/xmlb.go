@@ -36,6 +36,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"errors"
+	"io"
 
 	"github.com/orisano/gosax"
 )
@@ -48,6 +49,31 @@ const (
 	Comment
 	Directive
 )
+
+type Decoder struct {
+	r *gosax.Reader
+}
+
+func NewDecoder(r io.Reader, buf []byte) *Decoder {
+	gr := gosax.NewReaderBuf(r, buf)
+	gr.EmitSelfClosingTag = true
+	return &Decoder{gr}
+}
+
+func (d *Decoder) Token() (Token, error) {
+	ev, err := d.r.Event()
+	if err == nil && ev.Type() == gosax.EventEOF {
+		err = io.EOF
+	}
+	if err != nil {
+		return Token{}, err
+	}
+	return Token(ev), nil
+}
+
+func (d *Decoder) Skip() error {
+	return gosax.Skip(d.r)
+}
 
 type Token gosax.Event
 

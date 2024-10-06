@@ -28,33 +28,32 @@ package xmlb_test
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
-	"github.com/orisano/gosax"
 	"github.com/orisano/gosax/xmlb"
 )
 
 func Example() {
 	r := strings.NewReader(`<root><element>Value</element></root>`)
-	gr := gosax.NewReader(r)
-	gr.EmitSelfClosingTag = true
+	d := xmlb.NewDecoder(r, make([]byte, 64*1024))
 	for {
-		ev, err := gr.Event()
+		tok, err := d.Token()
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
 			break
 		}
-		if ev.Type() == gosax.EventEOF {
-			break
-		}
-		switch t := xmlb.Token(ev); t.Type() {
+		switch tok.Type() {
 		case xmlb.StartElement:
-			t, _ := t.StartElement()
+			t, _ := tok.StartElement()
 			fmt.Println("StartElement", t.Name.Local)
 		case xmlb.CharData:
-			t, _ := t.CharData()
+			t, _ := tok.CharData()
 			fmt.Println("CharData", string(t))
 		case xmlb.EndElement:
-			fmt.Println("EndElement", string(t.Name().Local()))
+			fmt.Println("EndElement", string(tok.Name().Local()))
 		}
 	}
 	// Output:
