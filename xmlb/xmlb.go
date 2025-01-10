@@ -52,15 +52,26 @@ const (
 
 type Decoder struct {
 	r *gosax.Reader
+
+	t   *Token
+	err error
 }
 
 func NewDecoder(r io.Reader, buf []byte) *Decoder {
 	gr := gosax.NewReaderBuf(r, buf)
 	gr.EmitSelfClosingTag = true
-	return &Decoder{gr}
+	return &Decoder{r: gr}
 }
 
 func (d *Decoder) Token() (Token, error) {
+	if d.err != nil {
+		return Token{}, d.err
+	}
+	if d.t != nil {
+		t := *d.t
+		d.t = nil
+		return t, nil
+	}
 	ev, err := d.r.Event()
 	if err == nil && ev.Type() == gosax.EventEOF {
 		err = io.EOF
@@ -69,6 +80,41 @@ func (d *Decoder) Token() (Token, error) {
 		return Token{}, err
 	}
 	return Token(ev), nil
+}
+
+func (d *Decoder) Peek() (Token, error) {
+	if d.err != nil {
+		return Token{}, d.err
+	}
+	if d.t == nil {
+		ev, err := d.r.Event()
+		if err == nil && ev.Type() == gosax.EventEOF {
+			d.err = io.EOF
+		} else {
+			d.err = err
+		}
+		if d.err != nil {
+			return Token{}, d.err
+		}
+		t := Token(ev)
+		d.t = &t
+	}
+	return *d.t, nil
+}
+
+func (d *Decoder) Text() (string, error) {
+	t, err := d.Peek()
+	if err != nil {
+		return "", err
+	}
+	if t.Type() != CharData {
+		return "", nil
+	}
+	cd, err := t.CharData()
+	if err != nil {
+		return "", err
+	}
+	return string(cd), nil
 }
 
 func (d *Decoder) Skip() error {
