@@ -118,7 +118,23 @@ func (d *Decoder) Text() (string, error) {
 }
 
 func (d *Decoder) Skip() error {
-	return gosax.Skip(d.r)
+	var depth int64
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			return err
+		}
+		switch tok.Type() {
+		case StartElement:
+			depth++
+		case EndElement:
+			if depth == 0 {
+				return nil
+			}
+			depth--
+		default:
+		}
+	}
 }
 
 type Token gosax.Event
