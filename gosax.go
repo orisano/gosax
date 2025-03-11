@@ -414,7 +414,9 @@ func NextAttribute(b []byte) (Attribute, []byte, error) {
 	i++
 	for ; i < len(b) && whitespace[b[i]]; i++ {
 	}
-
+	if i == len(b) {
+		return Attribute{Key: key}, nil, fmt.Errorf("attribute value not found")
+	}
 	if b[i] == '"' {
 		valueEnd := i + 1 + bytes.IndexByte(b[i+1:], '"') + 1
 		value := b[i:valueEnd]
