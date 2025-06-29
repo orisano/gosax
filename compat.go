@@ -33,8 +33,11 @@ package gosax
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"io"
 )
+
+var errSyntaxError = errors.New("syntax error")
 
 // StartElement converts a byte slice to an xml.StartElement.
 func StartElement(b []byte) (xml.StartElement, error) {
@@ -51,6 +54,9 @@ func StartElement(b []byte) (xml.StartElement, error) {
 		}
 		if len(attr.Key) == 0 {
 			break
+		}
+		if len(attr.Value) == 0 {
+			return e, errSyntaxError
 		}
 		value, err := Unescape(attr.Value[1 : len(attr.Value)-1])
 		if err != nil {
