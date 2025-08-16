@@ -236,7 +236,7 @@ func (t Token) EndElement() xml.EndElement {
 }
 
 func (t Token) CharData() (xml.CharData, error) {
-	switch t.Type() {
+	switch gosax.Event(t).Type() {
 	case gosax.EventText:
 		return gosax.CharData(t.Bytes)
 	case gosax.EventCData:
