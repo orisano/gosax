@@ -59,6 +59,25 @@ func ExampleReader_Event() {
 	// </root>
 }
 
+func ExampleReader_Events() {
+	xmlData := `<root><element>Value</element></root>`
+	reader := strings.NewReader(xmlData)
+
+	r := gosax.NewReader(reader)
+	for e, err := range r.Events {
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(string(e.Bytes))
+	}
+	// Output:
+	// <root>
+	// <element>
+	// Value
+	// </element>
+	// </root>
+}
+
 func ExampleNewReaderBuf() {
 	xmlData := `<root><element>Value</element></root>`
 	reader := strings.NewReader(xmlData)
