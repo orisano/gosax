@@ -2,10 +2,10 @@ name: main
 on: push
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     strategy:
       matrix:
-        go: [ '1.22', '1.23', '1.24' ]
+        go: [ '1.23', '1.24', '1.25' ]
     name: go ${{ matrix.go }}
     steps:
       - uses: actions/checkout@v4
